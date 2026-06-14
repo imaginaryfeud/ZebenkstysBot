@@ -47,12 +47,20 @@ async def handle_triggers(text, channel, mention, original_content):
 # ── Message listener ───────────────────────────────────────────────────────────
 @bot.event
 async def on_message(message):
-    # Ignore self
     if message.author == bot.user:
         return
 
-    # RAID ALARM bot — read embeds
     if message.author.bot:
+        print(f"Bot message from: '{message.author.display_name}'")
+        print(f"Content: '{message.content}'")
+        if message.embeds:
+            for embed in message.embeds:
+                print(f"Embed title: '{embed.title}'")
+                print(f"Embed description: '{embed.description}'")
+                print(f"Embed fields: {[f.value for f in embed.fields]}")
+        else:
+            print("No embeds found")
+
         if message.author.display_name == RAID_ALARM_NAME and message.embeds:
             for embed in message.embeds:
                 embed_text = " ".join(filter(None, [
