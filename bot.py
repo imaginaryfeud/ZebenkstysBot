@@ -22,9 +22,9 @@ if not SERVER_IP:
 
 # ── Trigger phrases ────────────────────────────────────────────────────────────
 TRIGGERS = {
-    "under attack": "🚨 Mažučiai, jus reidina (◕‿◕)  {mention}: {content}",
-    "10%":          "Pakeiskit akumą",
-    "connection lost": "bazė nebestebima",
+    "under attack": "🚨 Mažučiai, jus reidina (◕‿◕) | Base is being raided {mention}: {content}",
+    "10%":          "Pakeiskit akumą | Change the battery",
+    "connection lost": "Bazė nebestebima | Base is no longer being monitored",
 }
 
 RAID_ALARM_NAME = "RAID ALARM"
