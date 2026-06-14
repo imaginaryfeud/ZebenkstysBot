@@ -106,7 +106,7 @@ async def update_status():
     except Exception as e:
         print(f"Error: {e}")
         await bot.change_presence(
-            activity=discord.Game(name="🔴 Server Offline")
+            activity=discord.Game(name="🔴⊹ ࣪ ˖ ")
         )
 
 @update_status.before_loop
