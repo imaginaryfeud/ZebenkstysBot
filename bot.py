@@ -21,27 +21,35 @@ if not SERVER_IP:
     raise ValueError("SERVER_IP is not set")
 
 # ── Trigger phrases ────────────────────────────────────────────────────────────
-TRIGGER_PHRASES = [
-    "under attack",
-]
+TRIGGERS = {
+    "under attack": "🚨 Mažučiai, jus reidina (◕‿◕)  {mention}: {content}",
+    "10%":          "Pakeiskit akumą",
+    "connection lost": "bazė nebestebima",
+}
 
 # ── Message listener ───────────────────────────────────────────────────────────
 @bot.event
 async def on_message(message):
-    # Ignore messages from the bot itself
     if message.author == bot.user:
         return
 
     content_lower = message.content.lower()
 
-    if any(phrase in content_lower for phrase in TRIGGER_PHRASES):
-        channel = message.channel  # reply in same channel, or use ALERT_CHANNEL_ID below
-        # Uncomment below to always send to a specific channel instead:
-        # channel = bot.get_channel(ALERT_CHANNEL_ID)
-        if channel:
-            await channel.send(f"@everyone 🚨 Mažučiai, jus reidina (◕‿◕)  {message.author.mention}: {message.content}")
+    for phrase, response in TRIGGERS.items():
+        if phrase in content_lower:
+            channel = message.channel
+            if channel:
+                if phrase == "under attack":
+                    await channel.send(
+                        f"@everyone " + response.format(
+                            mention=message.author.mention,
+                            content=message.content
+                        )
+                    )
+                else:
+                    await channel.send(f"@everyone, {response}")
+            break  # only fire the first matching trigger
 
-    # Required to keep !commands working
     await bot.process_commands(message)
 
 # ── Minecraft status loop ──────────────────────────────────────────────────────
