@@ -13,7 +13,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # ── Environment variables ──────────────────────────────────────────────────────
 TOKEN = os.getenv("TOKEN")
 SERVER_IP = os.getenv("SERVER_IP")
-ALERT_CHANNEL_ID = int(os.getenv("ALERT_CHANNEL_ID", "0"))  # channel to send @everyone
+ALERT_CHANNEL_ID = int(os.getenv("ALERT_CHANNEL_ID", "0"))
 
 if not TOKEN:
     raise ValueError("TOKEN is not set")
@@ -27,28 +27,53 @@ TRIGGERS = {
     "connection lost": "bazė nebestebima",
 }
 
+RAID_ALARM_NAME = "RAID ALARM"
+
+# ── Shared trigger handler ─────────────────────────────────────────────────────
+async def handle_triggers(text, channel, mention, original_content):
+    for phrase, response in TRIGGERS.items():
+        if phrase in text.lower():
+            if phrase == "under attack":
+                await channel.send(
+                    "@everyone " + response.format(
+                        mention=mention,
+                        content=original_content
+                    )
+                )
+            else:
+                await channel.send(f"@everyone, {response}")
+            break
+
 # ── Message listener ───────────────────────────────────────────────────────────
 @bot.event
 async def on_message(message):
-    if message.author.bot:
+    # Ignore self
+    if message.author == bot.user:
         return
 
-    content_lower = message.content.lower()
+    # RAID ALARM bot — read embeds
+    if message.author.bot:
+        if message.author.display_name == RAID_ALARM_NAME and message.embeds:
+            for embed in message.embeds:
+                embed_text = " ".join(filter(None, [
+                    embed.title or "",
+                    embed.description or "",
+                ]))
+                await handle_triggers(
+                    embed_text,
+                    message.channel,
+                    message.author.mention,
+                    embed.description or ""
+                )
+        return
 
-    for phrase, response in TRIGGERS.items():
-        if phrase in content_lower:
-            channel = message.channel
-            if channel:
-                if phrase == "under attack":
-                    await channel.send(
-                        f"@everyone " + response.format(
-                            mention=message.author.mention,
-                            content=message.content
-                        )
-                    )
-                else:
-                    await channel.send(f"@everyone, {response}")
-            break  # only fire the first matching trigger
+    # Regular users — read message content
+    await handle_triggers(
+        message.content,
+        message.channel,
+        message.author.mention,
+        message.content
+    )
 
     await bot.process_commands(message)
 
