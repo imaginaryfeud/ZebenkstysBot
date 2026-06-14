@@ -30,7 +30,7 @@ TRIGGERS = {
 # ── Message listener ───────────────────────────────────────────────────────────
 @bot.event
 async def on_message(message):
-    if message.author == bot.user:
+    if message.author.bot:
         return
 
     content_lower = message.content.lower()
