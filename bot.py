@@ -27,13 +27,17 @@ TRIGGERS = {
     "connection lost": "Bazė nebestebima | Base is no longer being monitored",
 }
 
+SILENT_TRIGGERS = {"10%"}  # these won't ping @everyone
+
 RAID_ALARM_NAME = "RAID ALARM"
 
 # ── Shared trigger handler ─────────────────────────────────────────────────────
 async def handle_triggers(text, channel, mention, original_content):
     for phrase, response in TRIGGERS.items():
         if phrase in text.lower():
-            if phrase == "under attack":
+            if phrase in SILENT_TRIGGERS:
+                await channel.send(response)
+            elif phrase == "under attack":
                 await channel.send(
                     "@everyone " + response.format(
                         mention=mention,
