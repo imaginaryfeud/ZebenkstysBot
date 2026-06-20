@@ -22,7 +22,7 @@ if not SERVER_IP:
 
 # ── Trigger phrases ────────────────────────────────────────────────────────────
 TRIGGERS = {
-    "under attack": "🚨 Mažučiai, jus reidina (◕‿◕) | Base is being raided {mention}: {content}",
+    "under attack": "🚨 Mažučiai, jus reidina (◕‿◕) | Base is being raided ",
     "10%":          "Pakeiskit akumą | Change the battery",
     "connection lost": "Bazė nebestebima | Base is no longer being monitored",
 }
