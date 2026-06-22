@@ -6,6 +6,7 @@ from aiohttp import web
 import asyncio
 import os
 
+
 # ── Intents setup ─────────────────────────────────────────────────────────────
 intents = discord.Intents.default()
 intents.message_content = True
