@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 from mcstatus import JavaServer
+import a2s
 from aiohttp import web
 import asyncio
 import os
@@ -13,12 +14,30 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # ── Environment variables ──────────────────────────────────────────────────────
 TOKEN = os.getenv("TOKEN")
 SERVER_IP = os.getenv("SERVER_IP")
+DAYZ_SERVER_IP = os.getenv("DAYZ_SERVER_IP")
 ALERT_CHANNEL_ID = int(os.getenv("ALERT_CHANNEL_ID", "0"))
 
 if not TOKEN:
     raise ValueError("TOKEN is not set")
 if not SERVER_IP:
     raise ValueError("SERVER_IP is not set")
+if not DAYZ_SERVER_IP:
+    raise ValueError("DAYZ_SERVER_IP is not set")
+
+
+def parse_host_port(value: str):
+    """Splits 'host:port' into (host, port). DayZ query port has no
+    universal default, so the env var must include it explicitly."""
+    if ":" not in value:
+        raise ValueError(
+            f"Expected 'host:port' format, got '{value}'. "
+            "DayZ's query port isn't standardized, so it must be included."
+        )
+    host, port = value.rsplit(":", 1)
+    return host, int(port)
+
+
+DAYZ_HOST, DAYZ_PORT = parse_host_port(DAYZ_SERVER_IP)
 
 # ── Trigger phrases ────────────────────────────────────────────────────────────
 TRIGGERS = {
@@ -89,7 +108,7 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-# ── Minecraft status loop ──────────────────────────────────────────────────────
+# ── Server status loop (Minecraft + DayZ) ──────────────────────────────────────
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
@@ -98,20 +117,35 @@ async def on_ready():
 @tasks.loop(seconds=30)
 async def update_status():
     print("Updating presence...")
+
+    # Try Minecraft first
     try:
         server = JavaServer.lookup(SERVER_IP)
         status = await bot.loop.run_in_executor(None, server.status)
         players = f"{status.players.online}/{status.players.max}"
         version = status.version.name
-        activity_text = f"{players} | {version}"
-        await bot.change_presence(
-            activity=discord.Game(name=activity_text[:128])
-        )
+        activity_text = f"🟩 MC {players} | {version}"
+        await bot.change_presence(activity=discord.Game(name=activity_text[:128]))
+        return
     except Exception as e:
-        print(f"Error: {e}")
-        await bot.change_presence(
-            activity=discord.Game(name="🔴⊹ ࣪ ˖ ")
+        print(f"Minecraft offline: {e}")
+
+    # Minecraft didn't respond — try DayZ
+    try:
+        info = await bot.loop.run_in_executor(
+            None, a2s.info, (DAYZ_HOST, DAYZ_PORT)
         )
+        players = f"{info.player_count}/{info.max_players}"
+        activity_text = f"🟦 DayZ {players} | {info.map_name}"
+        await bot.change_presence(activity=discord.Game(name=activity_text[:128]))
+        return
+    except Exception as e:
+        print(f"DayZ offline: {e}")
+
+    # Neither server responded
+    await bot.change_presence(
+        activity=discord.Game(name="🔴⊹ ࣪ ˖ ")
+    )
 
 @update_status.before_loop
 async def before_update():
