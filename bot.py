@@ -137,7 +137,7 @@ async def update_status():
             None, a2s.info, (DAYZ_HOST, DAYZ_PORT)
         )
         players = f"{info.player_count}/{info.max_players}"
-        activity_text = f"🟦 DayZ {players} | {info.map_name}"
+        activity_text = f"🟩 DayZ {players} | {info.map_name}"
         await bot.change_presence(activity=discord.Game(name=activity_text[:128]))
         return
     except Exception as e:
@@ -145,7 +145,7 @@ async def update_status():
 
     # Neither server responded
     await bot.change_presence(
-        activity=discord.Game(name="🔴⊹ ࣪ ˖ ")
+        activity=discord.Game(name="🔴 ⊹ ࣪ ˖ ")
     )
 
 @update_status.before_loop
